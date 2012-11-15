@@ -1,13 +1,15 @@
 (ns clojure-solr
-  (:import (org.apache.solr.client.solrj.impl CommonsHttpSolrServer)
+  (:import (org.apache.solr.client.solrj.impl HttpSolrServer)
            (org.apache.solr.common SolrInputDocument)
            (org.apache.solr.client.solrj SolrQuery)
            (org.apache.solr.common.params ModifiableSolrParams)))
 
-(declare *connection*)
+(declare ^:dynamic connection)
+
+(def version "3.6.1")
 
 (defn connect [url]
-  (CommonsHttpSolrServer. url))
+  (HttpSolrServer. url))
 
 (defn- make-document [doc]
   (let [sdoc (SolrInputDocument.)]
@@ -19,13 +21,13 @@
     sdoc))
 
 (defn add-document! [doc]
-  (.add *connection* (make-document doc)))
+  (.add connection (make-document doc)))
 
 (defn add-documents! [coll]
-  (.add *connection* (to-array (map make-document coll))))
+  (.add connection (new java.util.ArrayList (map make-document coll))))
 
 (defn commit! []
-  (.commit *connection*))
+  (.commit connection))
 
 (defn- doc-to-hash [doc]
   (let [field-names (.getFieldNames doc)
@@ -42,13 +44,13 @@
   (let [query (SolrQuery. q)]
     (doseq [[key value] (partition 2 flags)]
       (.setParam query (apply str (rest (str key))) (make-param value)))
-    (map doc-to-hash (.getResults (.query *connection* query)))))
+    (map doc-to-hash (.getResults (.query connection query)))))
 
 (defn delete-id! [id]
-  (.deleteById *connection* id))
+  (.deleteById connection id))
 
 (defn delete-query! [q]
-  (.deleteByQuery *connection* q))
+  (.deleteByQuery connection q))
 
 (defn data-import [type]
   (let [type (cond (= type :full) "full-import"
@@ -56,8 +58,8 @@
         params (doto (ModifiableSolrParams.)
                  (.set "qt" (make-param "/dataimport"))
                  (.set "command" (make-param type)))]
-    (.query *connection* params)))
+    (.query connection params)))
 
 (defmacro with-connection [conn & body]
-  `(binding [*connection* ~conn]
+  `(binding [connection ~conn]
      ~@body))

@@ -4,6 +4,8 @@ clojure-solr
 
 Clojure bindings for `Apache Solr <http://lucene.apache.org/solr/>`_.
 
+This fork is Updated to run against Solr 3.6.1 and Clojure 1.4.0
+
 Installation
 ============
 
@@ -12,7 +14,7 @@ project.clj file:
 
 ::
 
-    [clojure-solr "0.2.0-SNAPSHOT"]
+    [clojure-solr "3.6.1"]
 
 To build from source, run:
 
